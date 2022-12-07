@@ -15,9 +15,11 @@ class Node:
 
     def add_parent(self, parent):
         self.parents.append(parent)
+        self.nodes.append(parent)
 
     def add_child(self, child):
         self.children.append(child)
+        self.nodes.append(child)
 
     def add_node(self, node):
         self.nodes.append(node)
