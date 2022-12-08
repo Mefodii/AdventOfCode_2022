@@ -4,10 +4,11 @@ from typing import Callable
 
 
 class Cell:
-    def __init__(self, x, y, value):
+    def __init__(self, x, y, value, matrix: Matrix):
         self.x = x
         self.y = y
         self.value = value
+        self.matrix = matrix
 
     def __repr__(self):
         return f'{self.x}-{self.y} value: {self.value}'
@@ -59,7 +60,7 @@ class Matrix:
         self.width = width
         self.init_value = init_value
 
-    def get_adjacent(self, x, y, diagonal=False) -> Adjacent:
+    def get_adjacent(self, x, y, diagonal=False) -> list[Adjacent]:
         adjacent = [Adjacent(Adjacent.UP, x, y - 1, self.get_cell_or_none(x, y - 1)),
                     Adjacent(Adjacent.DOWN, x, y + 1, self.get_cell_or_none(x, y + 1)),
                     Adjacent(Adjacent.LEFT, x - 1, y, self.get_cell_or_none(x - 1, y)),
@@ -156,10 +157,10 @@ class Matrix:
         return [init_value for _ in range(size)]
 
     @staticmethod
-    def init_matrix(data, func: Callable = lambda x, y, cell: cell) -> Matrix:
+    def init_matrix(data, func: Callable = lambda x, y, cell, matrix: cell) -> Matrix:
         matrix = Matrix(len(data), len(data[0]))
         for y, row in enumerate(data):
             for x, cell in enumerate(row):
-                matrix.set_cell(x, y, value=func(x, y, cell))
+                matrix.set_cell(x, y, value=func(x, y, cell, matrix))
 
         return matrix
