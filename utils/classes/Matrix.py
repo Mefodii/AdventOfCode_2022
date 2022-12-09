@@ -24,15 +24,15 @@ class Direction(Enum):
     DOWN_LEFT = DOWN_LEFT
 
 
-DIRECTIONS = {
-    UP: Direction.UP,
-    DOWN: Direction.DOWN,
-    LEFT: Direction.LEFT,
-    RIGHT: Direction.RIGHT,
-    UP_RIGHT: Direction.UP_RIGHT,
-    UP_LEFT: Direction.UP_LEFT,
-    DOWN_RIGHT: Direction.DOWN_RIGHT,
-    DOWN_LEFT: Direction.DOWN_LEFT,
+MOVE = {
+    Direction.UP: lambda x, y, dist: [x, y - dist],
+    Direction.DOWN: lambda x, y, dist: [x, y + dist],
+    Direction.LEFT: lambda x, y, dist: [x - dist, y],
+    Direction.RIGHT: lambda x, y, dist: [x + dist, y],
+    Direction.UP_LEFT: lambda x, y, dist: [x - dist, y - dist],
+    Direction.UP_RIGHT: lambda x, y, dist: [x + dist, y - dist],
+    Direction.DOWN_LEFT: lambda x, y, dist: [x - dist, y + dist],
+    Direction.DOWN_RIGHT: lambda x, y, dist: [x + dist, y + dist],
 }
 
 
