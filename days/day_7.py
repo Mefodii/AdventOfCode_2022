@@ -3,15 +3,15 @@ from utils.classes.Graph import Node
 
 
 class File(Node):
-    def __init__(self, name: str, size: int, parent: Dir):
-        super().__init__(name)
+    def __init__(self, value: str, size: int, parent: Dir):
+        super().__init__(value)
         self.size = size
         super().add_parent(parent)
 
 
 class Dir(Node):
-    def __init__(self, name):
-        super().__init__(name)
+    def __init__(self, value):
+        super().__init__(value)
         self.size = 0
         self.dirs = []
         self.files = []
@@ -24,9 +24,9 @@ class Dir(Node):
         self.dirs.append(directory)
         super().add_child(directory)
 
-    def get_dir(self, name: str) -> Dir | None:
+    def get_dir(self, value: str) -> Dir | None:
         for directory in self.dirs:
-            if directory.name == name:
+            if directory.value == value:
                 return directory
         return None
 
@@ -46,7 +46,7 @@ class Dir(Node):
         return result
 
     def __repr__(self):
-        return f"{self.name} - {self.size}"
+        return f"{self.value} - {self.size}"
 
 
 class Shell:
