@@ -12,25 +12,23 @@ class Tree(Cell):
         self.score = 0
 
     def calculate_visibility(self) -> bool:
-        x = self.x
-        y = self.y
-        conditions = [self.matrix.is_edge(x, y)] + [self.is_side_visible(side) for side in self.matrix.get_sides(x, y)]
+        conditions = [self.is_edge()] + [self.is_side_visible(side) for side in self.get_sides()]
         self.is_visible = any(conditions)
 
         return self.is_visible
 
-    def is_side_visible(self, side: list[Tree]) -> bool:
+    def is_side_visible(self, side: list[Cell]) -> bool:
         return all(tree < self for tree in side)
 
     def calculate_distance(self):
-        sides = self.matrix.get_sides(self.x, self.y)
+        sides = self.get_sides()
         sides[2] = sides[2][::-1]
         sides[3] = sides[3][::-1]
 
         self.distances = [self.calculate_side_distance(side) for side in sides]
         self.calculate_score()
 
-    def calculate_side_distance(self, side: list[Tree]) -> int:
+    def calculate_side_distance(self, side: list[Cell]) -> int:
         return next((i + 1 for i in range(len(side)) if self.value <= side[i].value), len(side))
 
     def calculate_score(self) -> int:
@@ -44,15 +42,15 @@ class Tree(Cell):
 ###############################################################################
 def run_a(input_data):
     trees = Matrix.init_matrix(input_data, func=lambda x, y, cell, matrix: Tree(x, y, int(cell), matrix))
-    [item["cell"].calculate_visibility() for item in trees]
-    result = len(list(filter(lambda t: t["cell"].is_visible, trees)))
+    [tree.calculate_visibility() for tree in trees]
+    result = len(list(filter(lambda t: t.is_visible, trees)))
 
     return result
 
 
 def run_b(input_data):
     trees = Matrix.init_matrix(input_data, func=lambda x, y, cell, matrix: Tree(x, y, int(cell), matrix))
-    [item["cell"].calculate_distance() for item in trees]
-    result = max([item["cell"].score for item in trees])
+    [tree.calculate_distance() for tree in trees]
+    result = max([tree.score for tree in trees])
 
     return result

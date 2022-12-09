@@ -1,14 +1,32 @@
 from __future__ import annotations
 
-from typing import Callable
+from typing import Callable, Any, Type
+
+
+class Direction:
+    UP = "U"
+    DOWN = "D"
+    LEFT = "L"
+    RIGHT = "R"
+    UP_RIGHT = "UR"
+    UP_LEFT = "UL"
+    DOWN_RIGHT = "DR"
+    DOWN_LEFT = "DL"
 
 
 class Cell:
-    def __init__(self, x, y, value, matrix: Matrix):
+    def __init__(self, x: int, y: int, value: Any, matrix: Matrix | Type[Matrix]):
         self.x = x
         self.y = y
         self.value = value
         self.matrix = matrix
+
+    def is_edge(self) -> bool:
+        return self.matrix.is_edge(self.x, self.y)
+
+    def get_sides(self) -> list[list[Cell | Type[Cell]]]:
+        """Get in line all sides from current coordinates. Clockwise, starting from right side (R,B,L,T)"""
+        return self.matrix.get_sides(self.x, self.y)
 
     def __repr__(self):
         return f'{self.x}-{self.y} value: {self.value}'
@@ -32,67 +50,49 @@ class Cell:
         return self.value.__ne__(other.value)
 
 
-class Adjacent:
-    UP = "U"
-    DOWN = "D"
-    LEFT = "L"
-    RIGHT = "R"
-    UP_RIGHT = "UR"
-    UP_LEFT = "UL"
-    DOWN_RIGHT = "DR"
-    DOWN_LEFT = "DL"
-
-    def __init__(self, direction, x, y, cell_value):
-        self.direction = direction
-        self.x = x
-        self.y = y
-        self.cell_value = cell_value
-
-    def __repr__(self):
-        return f"{self.direction} {self.x} {self.y} {self.cell_value}"
-
-
 class Matrix:
 
-    def __init__(self, height: int, width: int, init_value=None):
-        self.matrix = [Matrix.init_row(width, init_value) for _ in range(height)]
+    def __init__(self, height: int, width: int, init_value: Any = None):
+        self.matrix = [[Cell(x, y, init_value, self) for x in range(width)] for y in range(height)]
         self.height = height
         self.width = width
         self.init_value = init_value
 
-    def get_adjacent(self, x, y, diagonal=False) -> list[Adjacent]:
-        adjacent = [Adjacent(Adjacent.UP, x, y - 1, self.get_cell_or_none(x, y - 1)),
-                    Adjacent(Adjacent.DOWN, x, y + 1, self.get_cell_or_none(x, y + 1)),
-                    Adjacent(Adjacent.LEFT, x - 1, y, self.get_cell_or_none(x - 1, y)),
-                    Adjacent(Adjacent.RIGHT, x + 1, y, self.get_cell_or_none(x + 1, y))]
+    def get_adjacent(self, x: int, y: int, diagonal: bool = False) -> dict[str, Cell | Type[Cell]]:
+        adjacent = {
+            Direction.UP: self.get_cell_or_none(x, y - 1),
+            Direction.DOWN: self.get_cell_or_none(x, y + 1),
+            Direction.LEFT: self.get_cell_or_none(x - 1, y),
+            Direction.RIGHT: self.get_cell_or_none(x + 1, y),
+        }
 
         if diagonal:
-            adjacent.append(Adjacent(Adjacent.UP_RIGHT, x + 1, y - 1, self.get_cell_or_none(x + 1, y - 1)))
-            adjacent.append(Adjacent(Adjacent.UP_LEFT, x - 1, y - 1, self.get_cell_or_none(x - 1, y - 1)))
-            adjacent.append(Adjacent(Adjacent.DOWN_RIGHT, x + 1, y + 1, self.get_cell_or_none(x + 1, y + 1)))
-            adjacent.append(Adjacent(Adjacent.DOWN_LEFT, x - 1, y + 1, self.get_cell_or_none(x - 1, y + 1)))
+            adjacent[Direction.UP_RIGHT] = self.get_cell_or_none(x + 1, y - 1)
+            adjacent[Direction.UP_LEFT] = self.get_cell_or_none(x - 1, y - 1)
+            adjacent[Direction.DOWN_RIGHT] = self.get_cell_or_none(x + 1, y + 1)
+            adjacent[Direction.DOWN_LEFT] = self.get_cell_or_none(x - 1, y + 1)
 
         return adjacent
 
-    def get_row(self, y):
+    def get_row(self, y: int) -> list[Cell | Type[Cell]]:
         return self.matrix[y]
 
-    def get_column(self, x):
+    def get_column(self, x: int) -> list[Cell | Type[Cell]]:
         return [row[x] for row in self.matrix]
 
-    def get_left(self, x, y):
+    def get_left(self, x: int, y: int) -> list[Cell | Type[Cell]]:
         return self.get_row(y)[:x]
 
-    def get_right(self, x, y):
-        return self.get_row(y)[x+1:]
+    def get_right(self, x: int, y: int) -> list[Cell | Type[Cell]]:
+        return self.get_row(y)[x + 1:]
 
-    def get_top(self, x, y):
+    def get_top(self, x: int, y: int) -> list[Cell | Type[Cell]]:
         return self.get_column(x)[:y]
 
-    def get_bottom(self, x, y):
-        return self.get_column(x)[y+1:]
+    def get_bottom(self, x: int, y: int) -> list[Cell | Type[Cell]]:
+        return self.get_column(x)[y + 1:]
 
-    def get_sides(self, x: int, y: int):
+    def get_sides(self, x: int, y: int) -> list[list[Cell | Type[Cell]]]:
         """Get in line all sides from current coordinates. Clockwise, starting from right side (R,B,L,T)"""
         return [
             self.get_right(x, y),
@@ -101,10 +101,13 @@ class Matrix:
             self.get_top(x, y),
         ]
 
-    def get_cell(self, x, y):
+    def get_cell(self, x: int, y: int) -> Cell | Type[Cell]:
         return self.matrix[y][x]
 
-    def get_cell_or_none(self, x, y):
+    def set_cell(self, x: int, y: int, cell: Cell | Type[Cell]):
+        self.matrix[y][x] = cell
+
+    def get_cell_or_none(self, x: int, y: int) -> Cell | Type[Cell] | None:
         if x >= self.width or x < 0:
             return None
         if y >= self.height or y < 0:
@@ -112,22 +115,15 @@ class Matrix:
 
         return self.matrix[y][x]
 
-    def set_cell(self, x, y, value):
-        self.matrix[y][x] = value
-
-    def is_edge(self, x, y):
+    def is_edge(self, x: int, y: int):
         return x == 0 or x == self.width - 1 or y == 0 or y == self.height - 1
-
-    def map_row(self, y, row_data):
-        for i in range(len(row_data)):
-            self.matrix[y][i] = row_data[i]
 
     def __iter__(self):
         self.current_x = 0
         self.current_y = 0
         return self
 
-    def __next__(self):
+    def __next__(self) -> Cell | Type[Cell]:
         if self.current_x >= self.width:
             self.current_x = 0
             self.current_y += 1
@@ -135,32 +131,25 @@ class Matrix:
         if self.current_y >= self.height:
             raise StopIteration
 
-        item = {
-            "cell": self.get_cell(self.current_x, self.current_y),
-            "x": self.current_x,
-            "y": self.current_y,
-        }
+        cell = self.get_cell(self.current_x, self.current_y)
         self.current_x += 1
 
-        return item
+        return cell
 
     def __repr__(self):
         result = ""
         for row in self.matrix:
             for cell in row:
-                result += str(cell)
+                result += str(cell.value)
             result += "\n"
         return result
 
     @staticmethod
-    def init_row(size, init_value=None):
-        return [init_value for _ in range(size)]
-
-    @staticmethod
-    def init_matrix(data, func: Callable = lambda x, y, cell, matrix: cell) -> Matrix:
-        matrix = Matrix(len(data), len(data[0]))
+    def init_matrix(data: list[list[Any]],
+                    func: Callable = lambda x, y, value, matrix: Cell(x, y, value, matrix)) -> Matrix:
+        matrix = Matrix(height=len(data), width=len(data[0]))
         for y, row in enumerate(data):
-            for x, cell in enumerate(row):
-                matrix.set_cell(x, y, value=func(x, y, cell, matrix))
+            for x, value in enumerate(row):
+                matrix.set_cell(x, y, cell=func(x, y, value, matrix))
 
         return matrix
