@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 ###############################################################################
 def run_a(input_data):
     return ""
