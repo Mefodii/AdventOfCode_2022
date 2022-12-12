@@ -1,9 +1,10 @@
 from __future__ import annotations
 from enum import Enum
 
-from typing import Callable, Any, Type, TypeVar
+from typing import Callable, Any, TypeVar, Self
 
-T = TypeVar('T', bound='Matrix')
+MatrixType = TypeVar('MatrixType', bound='Matrix')
+CellType = TypeVar('CellType', bound='Cell')
 
 UP = "U"
 DOWN = "D"
@@ -39,7 +40,7 @@ MOVE = {
 
 
 class Cell:
-    def __init__(self, x: int, y: int, value: Any, matrix: Matrix | Type[Matrix]):
+    def __init__(self, x: int, y: int, value: Any, matrix: MatrixType):
         self.x = x
         self.y = y
         self.value = value
@@ -48,29 +49,29 @@ class Cell:
     def is_edge(self) -> bool:
         return self.matrix.is_edge(self.x, self.y)
 
-    def get_sides(self) -> list[list[Cell | Type[Cell]]]:
+    def get_sides(self) -> list[list[Self]]:
         """Get in line all sides from current coordinates. Clockwise, starting from right side (R,B,L,T)"""
         return self.matrix.get_sides(self.x, self.y)
 
     def __repr__(self):
         return f'{self.x}-{self.y} value: {self.value}'
 
-    def __lt__(self, other):
+    def __lt__(self, other: Self):
         return self.value.__lt__(other.value)
 
-    def __le__(self, other):
+    def __le__(self, other: Self):
         return self.value.__le__(other.value)
 
-    def __gt__(self, other):
+    def __gt__(self, other: Self):
         return self.value.__gt__(other.value)
 
-    def __ge__(self, other):
+    def __ge__(self, other: Self):
         return self.value.__ge__(other.value)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Self):
         return self.value.__eq__(other.value)
 
-    def __ne__(self, other):
+    def __ne__(self, other: Self):
         return self.value.__ne__(other.value)
 
 
@@ -93,10 +94,12 @@ class Matrix:
             self.matrix[y] = row
 
     def map_data(self, data: list[list[Any]],
-                 func: Callable = lambda x, y, value, matrix: Cell(x, y, value, matrix)):
+                 func: Callable = lambda x, y, value, matrix: Cell(x, y, value, matrix)) -> Self:
         for y, row in enumerate(data):
             for x, value in enumerate(row):
                 self.set_cell(x, y, cell=func(x, y, value, self))
+
+        return self
 
     def get_data(self) -> list[list[Any]]:
         data = []
@@ -105,29 +108,31 @@ class Matrix:
 
         return data
 
-    def get_column_range(self):
+    def get_column_range(self) -> range:
         return range(self.min_y, self.max_y + 1)
 
-    def get_row_range(self):
+    def get_row_range(self) -> range:
         return range(self.min_x, self.max_x + 1)
 
-    def append_right(self, cell_func: Callable = lambda x, y, value, matrix: Cell(x, y, value, matrix)):
+    def append_right(self, cell_func: Callable = lambda x, y, value, matrix: Cell(x, y, value, matrix)) -> Self:
         """Creates new column at the right"""
         self.width += 1
         self.max_x += 1
         x = self.max_x
 
         [self.set_cell(x, y, cell_func(x, y, self.init_value, self)) for y in self.get_column_range()]
+        return self
 
-    def append_left(self, cell_func: Callable = lambda x, y, value, matrix: Cell(x, y, value, matrix)):
+    def append_left(self, cell_func: Callable = lambda x, y, value, matrix: Cell(x, y, value, matrix)) -> Self:
         """Creates new column at the left"""
         self.width += 1
         self.min_x -= 1
         x = self.min_x
 
         [self.set_cell(x, y, cell_func(x, y, self.init_value, self)) for y in self.get_column_range()]
+        return self
 
-    def append_bottom(self, cell_func: Callable = lambda x, y, value, matrix: Cell(x, y, value, matrix)):
+    def append_bottom(self, cell_func: Callable = lambda x, y, value, matrix: Cell(x, y, value, matrix)) -> Self:
         """Creates new row at the bottom"""
         self.height += 1
         self.max_y += 1
@@ -136,8 +141,9 @@ class Matrix:
 
         for x in self.get_row_range():
             self.set_cell(x, y, cell_func(x, y, self.init_value, self))
+        return self
 
-    def append_top(self, cell_func: Callable = lambda x, y, value, matrix: Cell(x, y, value, matrix)):
+    def append_top(self, cell_func: Callable = lambda x, y, value, matrix: Cell(x, y, value, matrix)) -> Self:
         """Creates new row at the top"""
         self.height += 1
         self.min_y -= 1
@@ -146,8 +152,9 @@ class Matrix:
 
         for x in self.get_row_range():
             self.set_cell(x, y, cell_func(x, y, self.init_value, self))
+        return self
 
-    def get_adjacent(self, x: int, y: int, diagonal: bool = False) -> dict[Direction, Cell | Type[Cell]]:
+    def get_adjacent(self, x: int, y: int, diagonal: bool = False) -> dict[Direction, CellType]:
         adjacent = {
             Direction.UP: self.get_cell_or_none(x, y - 1),
             Direction.DOWN: self.get_cell_or_none(x, y + 1),
@@ -163,25 +170,25 @@ class Matrix:
 
         return adjacent
 
-    def get_row(self, y: int) -> list[Cell | Type[Cell]]:
+    def get_row(self, y: int) -> list[CellType]:
         return [self.get_cell(x, y) for x in self.get_row_range()]
 
-    def get_column(self, x: int) -> list[Cell | Type[Cell]]:
+    def get_column(self, x: int) -> list[CellType]:
         return [self.get_cell(x, y) for y in self.get_column_range()]
 
-    def get_left(self, x: int, y: int) -> list[Cell | Type[Cell]]:
+    def get_left(self, x: int, y: int) -> list[CellType]:
         return self.get_row(y)[:x - self.min_x]
 
-    def get_right(self, x: int, y: int) -> list[Cell | Type[Cell]]:
+    def get_right(self, x: int, y: int) -> list[CellType]:
         return self.get_row(y)[x + 1 - self.min_x:]
 
-    def get_top(self, x: int, y: int) -> list[Cell | Type[Cell]]:
+    def get_top(self, x: int, y: int) -> list[CellType]:
         return self.get_column(x)[:y - self.min_y]
 
-    def get_bottom(self, x: int, y: int) -> list[Cell | Type[Cell]]:
+    def get_bottom(self, x: int, y: int) -> list[CellType]:
         return self.get_column(x)[y + 1 - self.min_y:]
 
-    def get_sides(self, x: int, y: int) -> list[list[Cell | Type[Cell]]]:
+    def get_sides(self, x: int, y: int) -> list[list[CellType]]:
         """Get in line all sides from current coordinates. Clockwise, starting from right side (R,B,L,T)"""
         return [
             self.get_right(x, y),
@@ -190,10 +197,10 @@ class Matrix:
             self.get_top(x, y),
         ]
 
-    def get_cell(self, x: int, y: int) -> Cell | Type[Cell]:
+    def get_cell(self, x: int, y: int) -> CellType:
         return self.matrix[y][x]
 
-    def set_cell(self, x: int, y: int, cell: Cell | Type[Cell]):
+    def set_cell(self, x: int, y: int, cell: CellType):
         # TODO: raise error if x / y out of bounds
         self.matrix[y][x] = cell
 
@@ -203,23 +210,23 @@ class Matrix:
     def set_value(self, x: int, y: int, value: Any):
         self.get_cell(x, y).value = value
 
-    def get_cell_or_none(self, x: int, y: int) -> Cell | Type[Cell] | None:
+    def get_cell_or_none(self, x: int, y: int) -> CellType | None:
         return self.matrix.get(y, {}).get(x, None)
 
-    def is_edge(self, x: int, y: int):
+    def is_edge(self, x: int, y: int) -> bool:
         return x == self.min_x or x == self.max_x or y == self.min_y or y == self.max_y
 
-    def __copy__(self):
+    def __copy__(self) -> Self:
         obj = type(self)(self.height, self.width, self.init_value)
         obj.map_data(self.get_data())
         return obj
 
-    def __iter__(self):
+    def __iter__(self) -> Self:
         self.current_x = self.min_x
         self.current_y = self.min_y
         return self
 
-    def __next__(self) -> Cell | Type[Cell]:
+    def __next__(self) -> CellType:
         if self.current_x >= self.width:
             self.current_x = self.min_x
             self.current_y += 1
@@ -232,7 +239,7 @@ class Matrix:
 
         return cell
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         result = ""
         for y in self.get_column_range():
             for x in self.get_row_range():
@@ -241,8 +248,8 @@ class Matrix:
         return result
 
     @classmethod
-    def init_matrix(cls: Type[T], data: list[list[Any]],
-                    func: Callable = lambda x, y, value, matrix: Cell(x, y, value, matrix)) -> T:
+    def init_matrix(cls, data: list[list[Any]],
+                    func: Callable = lambda x, y, value, matrix: Cell(x, y, value, matrix)) -> Self:
         matrix = cls(height=len(data), width=len(data[0]))
         matrix.map_data(data, func)
         return matrix
