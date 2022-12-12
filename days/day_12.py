@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from typing import Any, Callable, Type
 
 from utils.classes.Matrix import Matrix, Cell, Direction
@@ -63,6 +64,7 @@ class Maze(Matrix):
         super().__init__(height, width, init_value)
         self.start = None
         self.end = None
+        self.dist = sys.maxsize
 
     def get_a_cells(self) -> list[Elevation | Type[Cell]]:
         result = []
@@ -106,7 +108,7 @@ class Maze(Matrix):
         dist = 1
         stuck = False
 
-        while not self.end.is_visited() and not stuck:
+        while not self.end.is_visited() and not stuck and dist < self.dist:
             stuck = True
             new_buffer = set()
             for elevation in buffer:
@@ -119,6 +121,9 @@ class Maze(Matrix):
 
             dist += 1
             buffer = new_buffer
+
+        if self.end.is_visited():
+            self.dist = self.end.dist
 
     @classmethod
     def init_matrix(cls: Maze, data: list[list[Any]],
@@ -137,13 +142,9 @@ def run_a(input_data):
 
 def run_b(input_data):
     maze = Maze.init_matrix(input_data)
-    results = []
     for cell in maze.get_a_cells():
         maze.reset()
         maze.switch_start(cell)
         maze.find_shortest_path()
-        if maze.end.dist > 0:
-            results.append(maze.end.dist)
 
-    results.sort()
-    return results[0]
+    return maze.dist
