@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sys
-from typing import Any, Callable, Type
+from typing import Any, Callable, Type, Self
 
 from utils.classes.Matrix import Matrix, Cell, Direction
 
@@ -23,7 +23,7 @@ class Elevation(Cell):
     def __hash__(self):
         return hash(repr(self))
 
-    def get_adjacent(self) -> dict[Direction, Elevation | Type[Cell]]:
+    def get_adjacent(self) -> dict[Direction, Self]:
         return self.matrix.get_adjacent(self.x, self.y)
 
     def is_visited(self) -> bool:
@@ -37,7 +37,7 @@ class Elevation(Cell):
 
         return ord(self.value)
 
-    def can_move(self, c: Elevation) -> bool:
+    def can_move(self, c: Self) -> bool:
         v1 = self.get_elevation()
         v2 = c.get_elevation()
         return v2 - v1 <= 1
@@ -49,7 +49,7 @@ class Elevation(Cell):
 
         return False
 
-    def get_non_visited_adjacent(self) -> list[Elevation]:
+    def get_non_visited_adjacent(self) -> list[Self]:
         result = []
         for adjacent in self.get_adjacent().values():
             if adjacent and not adjacent.is_visited():
@@ -66,7 +66,7 @@ class Maze(Matrix):
         self.end = None
         self.dist = sys.maxsize
 
-    def get_a_cells(self) -> list[Elevation | Type[Cell]]:
+    def get_a_cells(self) -> list[Elevation]:
         result = []
         for y in self.get_column_range():
             for x in self.get_row_range():
