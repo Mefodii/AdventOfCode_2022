@@ -1,7 +1,9 @@
 from __future__ import annotations
 from enum import Enum
 
-from typing import Callable, Any, Type
+from typing import Callable, Any, Type, TypeVar
+
+T = TypeVar('T', bound='Matrix')
 
 UP = "U"
 DOWN = "D"
@@ -73,7 +75,6 @@ class Cell:
 
 
 class Matrix:
-
     def __init__(self, height: int, width: int, init_value: Any = None):
         self.height = height
         self.width = width
@@ -90,6 +91,19 @@ class Matrix:
             for x in range(width):
                 row[x] = Cell(x, y, init_value, self)
             self.matrix[y] = row
+
+    def map_data(self, data: list[list[Any]],
+                 func: Callable = lambda x, y, value, matrix: Cell(x, y, value, matrix)):
+        for y, row in enumerate(data):
+            for x, value in enumerate(row):
+                self.set_cell(x, y, cell=func(x, y, value, self))
+
+    def get_data(self) -> list[list[Any]]:
+        data = []
+        for y in self.get_column_range():
+            data.append([cell.value for cell in self.get_row(y)])
+
+        return data
 
     def get_column_range(self):
         return range(self.min_y, self.max_y + 1)
@@ -195,6 +209,11 @@ class Matrix:
     def is_edge(self, x: int, y: int):
         return x == self.min_x or x == self.max_x or y == self.min_y or y == self.max_y
 
+    def __copy__(self):
+        obj = type(self)(self.height, self.width, self.init_value)
+        obj.map_data(self.get_data())
+        return obj
+
     def __iter__(self):
         self.current_x = self.min_x
         self.current_y = self.min_y
@@ -221,12 +240,9 @@ class Matrix:
             result += "\r\n"
         return result
 
-    @staticmethod
-    def init_matrix(data: list[list[Any]],
-                    func: Callable = lambda x, y, value, matrix: Cell(x, y, value, matrix)) -> Matrix:
-        matrix = Matrix(height=len(data), width=len(data[0]))
-        for y, row in enumerate(data):
-            for x, value in enumerate(row):
-                matrix.set_cell(x, y, cell=func(x, y, value, matrix))
-
+    @classmethod
+    def init_matrix(cls: Type[T], data: list[list[Any]],
+                    func: Callable = lambda x, y, value, matrix: Cell(x, y, value, matrix)) -> T:
+        matrix = cls(height=len(data), width=len(data[0]))
+        matrix.map_data(data, func)
         return matrix
