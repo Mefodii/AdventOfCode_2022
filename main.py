@@ -14,7 +14,7 @@ def __main__():
     run(day, PART_ONE, True)
     print("------------------------------------------------------------------")
     print("Running Part 1")
-    # run(day, PART_ONE)
+    run(day, PART_ONE)
 
     print("------------------------------------------------------------------")
     print("Running Part 2 [TEST]")
