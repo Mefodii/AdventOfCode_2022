@@ -4,3 +4,5 @@ def is_int(value):
         return True
     except ValueError:
         return False
+    except TypeError:
+        return False
