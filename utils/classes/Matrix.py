@@ -1,7 +1,7 @@
 from __future__ import annotations
 from enum import Enum
 
-from typing import Callable, Any, TypeVar, Self
+from typing import Callable, Any, TypeVar, Self, Tuple
 
 MatrixType = TypeVar('MatrixType', bound='Matrix')
 CellType = TypeVar('CellType', bound='Cell')
@@ -45,6 +45,12 @@ class Cell:
         self.y = y
         self.value = value
         self.matrix = matrix
+
+    def get_coords(self) -> Tuple[int, int]:
+        return self.x, self.y
+
+    def get_neighbour(self, direction: Direction) -> CellType | None:
+        return self.matrix.get_neighbour(self.x, self.y, direction)
 
     def is_edge(self) -> bool:
         return self.matrix.is_edge(self.x, self.y)
@@ -153,6 +159,10 @@ class Matrix:
         for x in self.get_row_range():
             self.set_cell(x, y, cell_func(x, y, self.init_value, self))
         return self
+
+    def get_neighbour(self, x, y, direction: Direction) -> CellType | None:
+        x1, y1 = MOVE[direction](x, y, 1)
+        return self.get_cell_or_none(x1, y1)
 
     def get_adjacent(self, x: int, y: int, diagonal: bool = False) -> dict[Direction, CellType]:
         adjacent = {
