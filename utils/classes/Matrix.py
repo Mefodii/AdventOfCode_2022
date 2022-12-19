@@ -59,6 +59,9 @@ class Cell:
         """Get in line all sides from current coordinates. Clockwise, starting from right side (R,B,L,T)"""
         return self.matrix.get_sides(self.x, self.y)
 
+    def get_distance(self, cell: CellType):
+        return Matrix.get_distance(self.x, self.y, cell.x, cell.y)
+
     def __repr__(self):
         return f'{self.x}-{self.y} value: {self.value}'
 
@@ -82,20 +85,20 @@ class Cell:
 
 
 class Matrix:
-    def __init__(self, height: int, width: int, init_value: Any = None):
+    def __init__(self, height: int, width: int, init_value: Any = None, min_x: int = 0, min_y: int = 0):
         self.height = height
         self.width = width
         self.init_value = init_value
 
-        self.min_x = 0
-        self.min_y = 0
-        self.max_x = width - 1
-        self.max_y = height - 1
+        self.min_x = min_x
+        self.min_y = min_y
+        self.max_x = width + min_x - 1
+        self.max_y = height + min_y - 1
 
         self.matrix = {}
-        for y in range(height):
+        for y in self.get_column_range():
             row = {}
-            for x in range(width):
+            for x in self.get_row_range():
                 row[x] = Cell(x, y, init_value, self)
             self.matrix[y] = row
 
@@ -159,6 +162,12 @@ class Matrix:
         for x in self.get_row_range():
             self.set_cell(x, y, cell_func(x, y, self.init_value, self))
         return self
+
+    @staticmethod
+    def get_distance(x1: int, y1: int, x2: int, y2: int) -> int:
+        x_dist = abs(x1 - x2)
+        y_dist = abs(y1 - y2)
+        return x_dist + y_dist
 
     def get_neighbour(self, x, y, direction: Direction) -> CellType | None:
         x1, y1 = MOVE[direction](x, y, 1)
