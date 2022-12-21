@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from utils.Regex import findall_numbers
-from utils.classes.Matrix import Cell, MatrixType, Matrix, CellType
+from utils.classes.Matrix import Cell, MatrixType, Matrix
 
 
 class Sensor(Cell):
@@ -63,14 +63,6 @@ class Cave(Matrix):
         self.beacons.append(beacon)
         self.set_cell(beacon.x, beacon.y, beacon)
 
-    def is_covered(self, x, y) -> bool:
-        for sensor in self.sensors:
-            distance = self.get_distance(sensor.x, sensor.y, x, y)
-            if distance <= sensor.distance:
-                return True
-
-        return False
-
 
 def init_cave(data) -> Cave:
     parsed_data = []
@@ -108,19 +100,10 @@ def init_cave(data) -> Cave:
 ###############################################################################
 def run_a(input_data, sample=False):
     cave = init_cave(input_data)
-    # print(cave)
 
-    covers = 0
     y = 10 if sample else 2000000
     cave.check_row(y)
-    print(cave.coverage)
-    # for x in cave.get_row_range():
-    #     print(f"{x} / {cave.max_x}")
-    #     covered = cave.is_covered(x, y)
-    #     if covered:
-    #         covers += 1
-    # print(covers)
-    return ""
+    return cave.coverage
 
 
 def run_b(input_data, sample=False):
