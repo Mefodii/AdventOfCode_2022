@@ -15,16 +15,23 @@ class Sensor(Cell):
             distance = start_dist
             x = start_x
             while distance <= self.distance and self.matrix.max_x >= x >= self.matrix.min_x:
-                cell = self.matrix.get_cell(x, y)
-                if type(cell) is Cell and cell.value != "#":
-                    cell.value = "#"
-                    self.matrix.coverage += 1
+                self.mark_cell(x, y)
                 x += mod
                 distance += 1
 
         y_dist = abs(y - self.y)
         mark_direction(self.x, y_dist, 1)
         mark_direction(self.x, y_dist, -1)
+
+    def mark_cell(self, x: int, y: int) -> None:
+        cell = self.matrix.get_cell_or_none(x, y)
+        if cell is None:
+            cell = Cell(x, y, "#", self.matrix)
+            self.matrix.set_cell(x, y, cell)
+            self.matrix.coverage += 1
+        elif type(cell) is Cell and cell.value != "#":
+            cell.value = "#"
+            self.matrix.coverage += 1
 
     def __repr__(self):
         return f"{super().__repr__()} | beacon: {repr(self.beacon)} | Dist: {self.distance}"
@@ -39,16 +46,13 @@ class Cave(Matrix):
     def __init__(self, min_x: int, min_y: int, max_x: int, max_y: int):
         width = max_x - min_x + 1
         height = max_y - min_y + 1
-        super().__init__(height, width, " ", min_x, min_y)
+        super().__init__(height, width, " ", min_x, min_y, lazy=True)
         self.sensors = []
         self.beacons = []
         self.coverage = 0
 
     def check_row(self, y: int):
-        i = 0
         for sensor in self.sensors:
-            print(i)
-            i += 1
             sensor.mark_row(y)
 
     def add_sensor(self, sensor: Sensor) -> None:
@@ -59,9 +63,10 @@ class Cave(Matrix):
         self.beacons.append(beacon)
         self.set_cell(beacon.x, beacon.y, beacon)
 
-    def is_covered(self, cell: CellType) -> bool:
+    def is_covered(self, x, y) -> bool:
         for sensor in self.sensors:
-            if cell.get_distance(sensor) <= sensor.distance:
+            distance = self.get_distance(sensor.x, sensor.y, x, y)
+            if distance <= sensor.distance:
                 return True
 
         return False
@@ -88,7 +93,7 @@ def init_cave(data) -> Cave:
     for coords in parsed_data:
         sx, sy, bx, by = coords
 
-        cell = cave.get_cell(bx, by)
+        cell = cave.get_cell_or_none(bx, by)
         if type(cell) is Beacon:
             beacon = cell
         else:
@@ -105,16 +110,15 @@ def run_a(input_data, sample=False):
     cave = init_cave(input_data)
     # print(cave)
 
-    # covers = 0
+    covers = 0
     y = 10 if sample else 2000000
     cave.check_row(y)
     print(cave.coverage)
     # for x in cave.get_row_range():
-    #     cell = cave.get_cell(x, y)
-    #     if type(cell) is Cell:
-    #         covered = cave.is_covered(cell)
-    #         if covered:
-    #             covers += 1
+    #     print(f"{x} / {cave.max_x}")
+    #     covered = cave.is_covered(x, y)
+    #     if covered:
+    #         covers += 1
     # print(covers)
     return ""
 
