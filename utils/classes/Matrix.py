@@ -63,7 +63,7 @@ class Cell:
         return Matrix.get_distance(self.x, self.y, cell.x, cell.y)
 
     def __repr__(self):
-        return f'{self.x}-{self.y} value: {self.value}'
+        return f'{self.x}, {self.y} value: {self.value}'
 
     def __lt__(self, other: Self):
         return self.value.__lt__(other.value)
@@ -98,6 +98,7 @@ class Matrix:
 
         self.matrix = {}
 
+        self.lazy = lazy
         if lazy:
             return
 
@@ -272,6 +273,9 @@ class Matrix:
         return cell
 
     def __repr__(self) -> str:
+        if self.lazy:
+            return f"Matrix is in lazy mode, cannot print"
+
         result = ""
         for y in self.get_column_range():
             for x in self.get_row_range():
