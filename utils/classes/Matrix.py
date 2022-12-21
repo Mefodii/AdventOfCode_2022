@@ -85,7 +85,8 @@ class Cell:
 
 
 class Matrix:
-    def __init__(self, height: int, width: int, init_value: Any = None, min_x: int = 0, min_y: int = 0):
+    def __init__(self, height: int, width: int, init_value: Any = None, min_x: int = 0, min_y: int = 0,
+                 lazy: bool = False):
         self.height = height
         self.width = width
         self.init_value = init_value
@@ -96,6 +97,10 @@ class Matrix:
         self.max_y = height + min_y - 1
 
         self.matrix = {}
+
+        if lazy:
+            return
+
         for y in self.get_column_range():
             row = {}
             for x in self.get_row_range():
@@ -220,8 +225,16 @@ class Matrix:
         return self.matrix[y][x]
 
     def set_cell(self, x: int, y: int, cell: CellType):
-        # TODO: raise error if x / y out of bounds
-        self.matrix[y][x] = cell
+        if not self.min_x <= x <= self.max_x:
+            raise Exception(f"x: {x} out of bounds")
+        if not self.min_y <= y <= self.max_y:
+            raise Exception(f"y: {y} out of bounds")
+
+        row = self.matrix.get(y, None)
+        if not row:
+            row = {}
+            self.matrix[y] = row
+        row[x] = cell
 
     def get_value(self, x: int, y: int) -> Any:
         return self.get_cell(x, y).value
